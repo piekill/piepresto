@@ -1,11 +1,15 @@
 from sshtunnel import SSHTunnelForwarder
+from timeout import timeout
 
 
 class Tunnel():
     def __init__(self):
         self.server = None
 
-    def start_tunnel(self, private_server_url, ssh_username, ssh_pkey, gateway_url, local_url):
+    @timeout(6, "Fail to establish tunnel")
+    def start_tunnel(
+            self, private_server_url, ssh_username, ssh_pkey, gateway_url,
+            local_url):
         self.stop_tunnel()
         gateway_url = gateway_url.split(':')
         private_server = private_server_url.split(':')

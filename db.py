@@ -1,5 +1,6 @@
 from pyhive import presto
 from PyQt5.QtCore import QThread, pyqtSignal
+from timeout import timeout
 
 
 class DBEngine(QThread):
@@ -61,6 +62,7 @@ class DBEngine(QThread):
         self.cursor.close()
         return results, columns
 
+    @timeout(6, "Fail to establish connection")
     def dbs(self):
         if not self.connection:
             raise Exception("No Connection")
