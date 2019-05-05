@@ -293,9 +293,65 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="keyFileLabel">
-             <property name="text">
-              <string>KeyFile:</string>
+            <widget class="QComboBox" name="keyComboBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>110</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="currentText">
+              <string>KeyFile</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>KeyFile</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Password</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="pwdLineEdit">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>188</width>
+               <height>22</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>188</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="echoMode">
+              <enum>QLineEdit::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>Enter Password...</string>
              </property>
             </widget>
            </item>

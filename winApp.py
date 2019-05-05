@@ -17,6 +17,8 @@ SERVER = 'SERVER'
 GATEWAY = 'GATEWAY'
 TUNNEL_USER = 'TUNNEL_USER'
 KEYFILE = 'KEYFILE'
+KEYTYPE = 'KEYTYPE'
+TUNNEL_PWD = 'TUNNEL_PWD'
 
 
 class WinApp(QMainWindow, Ui_MainWindow):
@@ -32,6 +34,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.tunnelWidget.hide()
         self.keyFileButton.clicked.connect(self.choose_keyfile)
         self.clearButton.clicked.connect(self.clear_tunnel)
+        self.keyComboBox.activated[str].connect(self.set_key_type)
 
         self.db_engine = DBEngine()
         self.db_engine.result_signal.connect(self.show_results)
@@ -113,17 +116,20 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.completer = SQLCompleter(self)
         self.sqlEdit.setCompleter(self.completer)
 
+        self.set_key_type(self.keyComboBox.currentText())
         self.sqlEdit.setFocus()
 
     def connect(self):
+        self.tablesWidget.clear()
+        self.schemaView.clear()
         try:
             if self.serverEdit.text().strip() and self.gatewayEdit.text().strip() and self.tunnelUserEdit.text().strip():
                 self.statusbar.showMessage('starting tunnel')
                 QApplication.processEvents()
                 self.tunnel.start_tunnel(
-                    self.serverEdit.text().strip(),
-                    self.tunnelUserEdit.text().strip(),
-                    self.tunnel_keyfile, self.gatewayEdit.text().strip(),
+                    self.serverEdit.text().strip(), self.gatewayEdit.text().strip(),
+                    self.tunnelUserEdit.text().strip(), self.keyComboBox.currentText() == 'KeyFile',
+                    self.tunnel_keyfile, self.pwdLineEdit.text(),
                     self.urlEdit.text().strip())
 
             self.statusbar.showMessage('connecting')
@@ -134,7 +140,6 @@ class WinApp(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage('fetching db info')
             QApplication.processEvents()
 
-            self.tablesWidget.clear()
             dbs = self.db_engine.dbs()
             for db in dbs:
                 db_item = QTreeWidgetItem([db])
@@ -322,6 +327,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.serverEdit.clear()
         self.gatewayEdit.clear()
         self.tunnelUserEdit.clear()
+        self.pwdLineEdit.clear()
 
     def close_all(self):
         self.save_settings()
@@ -337,6 +343,8 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.tunnel_keyfile = self.settings.value(KEYFILE, "")
         if self.tunnel_keyfile:
             self.keyFileButton.setText(self.tunnel_keyfile.split('/')[-1])
+        self.pwdLineEdit.setText(self.settings.value(TUNNEL_PWD, ""))
+        self.keyComboBox.setCurrentText(self.settings.value(KEYTYPE, "KeyFile"))
 
     def save_settings(self):
         self.settings.setValue(URL, self.urlEdit.text().strip())
@@ -345,7 +353,17 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.settings.setValue(GATEWAY, self.gatewayEdit.text().strip())
         self.settings.setValue(TUNNEL_USER, self.tunnelUserEdit.text().strip())
         self.settings.setValue(KEYFILE, self.tunnel_keyfile)
+        self.settings.setValue(KEYTYPE, self.keyComboBox.currentText())
+        self.settings.setValue(TUNNEL_PWD, self.pwdLineEdit.text())
         self.settings.sync()
 
     def show_error(self, error):
         QMessageBox.critical(self, "Error", error)
+
+    def set_key_type(self, key_type):
+        if key_type == 'KeyFile':
+            self.pwdLineEdit.hide()
+            self.keyFileButton.show()
+        else:
+            self.keyFileButton.hide()
+            self.pwdLineEdit.show()
