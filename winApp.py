@@ -267,7 +267,6 @@ class WinApp(QMainWindow, Ui_MainWindow):
 
         dialog.move(self.dataWidget.mapToGlobal(position) +
                     QPoint(dialog.width() / 5 * 2, dialog.height() + 5))
-        dialog.setWindowOpacity(0.75)
         dialog.adjustSize()
         dialog.show()
 
