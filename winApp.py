@@ -346,7 +346,8 @@ class WinApp(QMainWindow, Ui_MainWindow):
         if self.tunnel_keyfile:
             self.keyFileButton.setText(self.tunnel_keyfile.split('/')[-1])
         self.pwdLineEdit.setText(self.settings.value(TUNNEL_PWD, ""))
-        self.keyComboBox.setCurrentText(self.settings.value(KEYTYPE, "KeyFile"))
+        self.keyComboBox.setCurrentText(
+            self.settings.value(KEYTYPE, "KeyFile"))
 
     def save_settings(self):
         self.settings.setValue(URL, self.urlEdit.text().strip())
