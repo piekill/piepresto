@@ -191,6 +191,8 @@ class WinApp(QMainWindow, Ui_MainWindow):
 
     def run(self):
         self.statusbar.showMessage('running')
+        self.dataWidget.setRowCount(0)
+        self.dataWidget.setColumnCount(0)
         QApplication.processEvents()
         try:
             self.stmt_signal.emit(

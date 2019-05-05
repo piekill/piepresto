@@ -57,7 +57,7 @@ class DBEngine(QThread):
         self.cursor = self.connection.cursor()
         self.cursor.execute(stmt)
         self.report_status()
-        results = self.cursor.fetchmany(500)
+        results = self.cursor.fetchmany(200)
         columns = self.cursor.description
         self.cursor.close()
         return results, columns
