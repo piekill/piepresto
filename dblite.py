@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-home = os.path.join(os.path.expanduser('~'), ".pypresto")
+home = os.path.join(os.path.expanduser('~'), ".piepresto")
 os.makedirs(home, exist_ok=True)
 lite_db = os.path.join(home, "history.db")
 

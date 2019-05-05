@@ -7,7 +7,7 @@ from PyQt5.QtCore import QCoreApplication
 
 ORGANIZATION_NAME = 'Piekill'
 ORGANIZATION_DOMAIN = 'piekill.com'
-APPLICATION_NAME = 'PyPresto'
+APPLICATION_NAME = 'PiePresto'
 
 
 def main():
@@ -25,7 +25,7 @@ def main():
 
     app = QApplication(sys.argv)
     app.setWindowIcon(QtGui.QIcon(
-        os.path.join(application_path, "pypresto.png")))
+        os.path.join(application_path, "piepresto.png")))
 
     window = WinApp()
     window.show()

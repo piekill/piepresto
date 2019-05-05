@@ -3,10 +3,10 @@
 block_cipher = None
 
 
-a = Analysis(['pypresto.py'],
+a = Analysis(['piepresto.py'],
              pathex=['.'],
              binaries=[],
-             datas=[('pypresto.png', '.')],
+             datas=[('piepresto.png', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -23,16 +23,16 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='pypresto',
+          name='piepresto',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='pypresto.png')
+          console=False , icon='piepresto.png')
 app = BUNDLE(exe,
-             name='pypresto.app',
-             icon='pypresto.icns',
+             name='piepresto.app',
+             icon='piepresto.icns',
              bundle_identifier=None,
              info_plist={
                 'NSPrincipalClass': 'NSApplication'

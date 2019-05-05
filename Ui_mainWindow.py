@@ -235,7 +235,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "PyPresto"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "PiePresto"))
         self.tablesWidget.headerItem().setText(0, _translate("MainWindow", "DBs/Tables"))
         self.schemaView.headerItem().setText(0, _translate("MainWindow", "Field"))
         self.schemaView.headerItem().setText(1, _translate("MainWindow", "Type"))
