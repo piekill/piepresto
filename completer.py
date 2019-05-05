@@ -40,10 +40,9 @@ class SQLCompleter(QCompleter):
 
     def addTreeItem(self, parent):
         root = self.model().findItems(parent.text(0))[0]
-        if parent.childCount() <= 0:
-            for child in [parent.child(i) for i in range(parent.childCount())]:
-                item = QStandardItem(child.text(0))
-                item.setData(
-                    parent.text(0) + self.sep + child.text(0),
-                    SQLCompleter.ConcatenationRole)
-                root.appendRow(item)
+        for child in [parent.child(i) for i in range(parent.childCount())]:
+            item = QStandardItem(child.text(0))
+            item.setData(
+                parent.text(0) + self.sep + child.text(0),
+                SQLCompleter.ConcatenationRole)
+            root.appendRow(item)
