@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['pypresto.py'],
-             pathex=['/Users/junxing.yang/Dropbox/dev/py-presto'],
+             pathex=['.'],
              binaries=[],
              datas=[('pypresto.png', '.')],
              hiddenimports=[],

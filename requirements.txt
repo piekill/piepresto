@@ -1,0 +1,6 @@
+lark-parser>=0.7.0
+pyhive>=0.6.1
+pyinstaller>=3.4
+pylru>=1.2.0
+pyqt5>=5.12.1
+sshtunnel>=0.1.4
