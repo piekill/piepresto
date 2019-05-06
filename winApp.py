@@ -63,9 +63,9 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.historyMenuBar.setNativeMenuBar(False)
         self.historyMenu = self.historyMenuBar.addMenu(
             '     &History   ⇲    ')
-        actions = [QAction(sql, self.historyMenu) for sql in history]
-        for action in actions:
-            action.triggered.connect(partial(self.use_history, action.text()))
+        actions = [QAction(sql.replace('\n', ' '), self.historyMenu) for sql in history]
+        for i in range(len(actions)):
+            actions[i].triggered.connect(partial(self.use_history, history[i]))
         self.historyMenu.addActions(actions)
 
         self.history_cache = pylru.lrucache(history_limit, self.remove_action)
@@ -248,7 +248,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
 
     def save_history(self, sql, results, columns):
         if sql not in self.history_cache:
-            action = QAction(sql, self.historyMenu)
+            action = QAction(sql.replace('\n', ' '), self.historyMenu)
             action.triggered.connect(partial(self.use_history, sql))
             self.history_cache[sql] = {
                 KEY_ACTION: action, KEY_RESULTS: results, KEY_COLUMNS: columns}

@@ -18,5 +18,7 @@
  # conda create -n piepresto python=3.7.3 pip; conda activate piepresto
  pip install -r requirements.txt
  pyinstaller piepresto.spec
+ # Note that on Linux you might need: 
+ # LD_LIBRARY_PATH=your_path_to_python_lib pyinstaller piepresto.spec
  ```
 - Alternatively, go to [release](https://github.com/piekill/piepresto/releases) for prebuild binaries.
