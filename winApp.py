@@ -4,13 +4,15 @@ from PyQt5.QtWidgets import QProgressBar, QMenuBar, QAction, QDialog, QHeaderVie
 from PyQt5.QtCore import Qt, QPoint, QDir, QSettings, pyqtSignal
 
 from db import DBEngine
-from dblite import DBLite
+from dblite import DBLite, history_limit
 import syntax
 from functools import partial
 import pylru
 from parser import type_parser
 from tunnel import Tunnel
 from completer import SQLCompleter
+from threading import Thread
+
 URL = 'URL'
 USER = 'USER'
 SERVER = 'SERVER'
@@ -19,6 +21,12 @@ TUNNEL_USER = 'TUNNEL_USER'
 KEYFILE = 'KEYFILE'
 KEYTYPE = 'KEYTYPE'
 TUNNEL_PWD = 'TUNNEL_PWD'
+
+KEY_ACTION = 'action'
+KEY_RESULTS = 'results'
+KEY_COLUMNS = 'columns'
+
+CACHE_LIMIT = 1000
 
 
 class WinApp(QMainWindow, Ui_MainWindow):
@@ -40,6 +48,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.db_engine.result_signal.connect(self.show_results)
         self.db_engine.progress_signal.connect(self.set_progress)
         self.db_engine.error_signal.connect(self.show_error)
+        self.db_engine.msg_signal.connect(self.show_msg)
         self.stmt_signal.connect(self.db_engine.receive_stmt)
 
         self.db_lite = DBLite()
@@ -56,12 +65,13 @@ class WinApp(QMainWindow, Ui_MainWindow):
             '     &History   ⇲    ')
         actions = [QAction(sql, self.historyMenu) for sql in history]
         for action in actions:
-            action.triggered.connect(partial(self.use_history, action))
+            action.triggered.connect(partial(self.use_history, action.text()))
         self.historyMenu.addActions(actions)
 
-        self.history_cache = pylru.lrucache(20, self.remove_action)
+        self.history_cache = pylru.lrucache(history_limit, self.remove_action)
         for i in reversed(range(len(history))):
-            self.history_cache[history[i]] = actions[i]
+            self.history_cache[history[i]] = {
+                KEY_ACTION: actions[i], KEY_RESULTS: [], KEY_COLUMNS: []}
 
         self.historyMenu.setStyleSheet("""
         QMenu {
@@ -124,7 +134,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.schemaView.clear()
         try:
             if self.serverEdit.text().strip() and self.gatewayEdit.text().strip() and self.tunnelUserEdit.text().strip():
-                self.statusbar.showMessage('starting tunnel')
+                self.statusbar.showMessage('Starting tunnel')
                 QApplication.processEvents()
                 self.tunnel.start_tunnel(
                     self.serverEdit.text().strip(), self.gatewayEdit.text().strip(),
@@ -132,12 +142,12 @@ class WinApp(QMainWindow, Ui_MainWindow):
                     self.tunnel_keyfile, self.pwdLineEdit.text(),
                     self.urlEdit.text().strip())
 
-            self.statusbar.showMessage('connecting')
+            self.statusbar.showMessage('Connecting')
             QApplication.processEvents()
             self.db_engine.connect(
                 self.urlEdit.text().strip(),
                 self.userEdit.text().strip())
-            self.statusbar.showMessage('fetching db info')
+            self.statusbar.showMessage('Fetching db info')
             QApplication.processEvents()
 
             dbs = self.db_engine.dbs()
@@ -146,19 +156,19 @@ class WinApp(QMainWindow, Ui_MainWindow):
                 db_item.setChildIndicatorPolicy(QTreeWidgetItem.ShowIndicator)
                 self.tablesWidget.addTopLevelItem(db_item)
             self.completer.addItems(dbs)
-            self.statusbar.showMessage('connected')
+            self.statusbar.showMessage('Connected')
 
         except Exception as err:
             QMessageBox.critical(self, "Error", str(err))
             self.db_engine.close()
-            self.statusbar.showMessage('disconnected')
+            self.statusbar.showMessage('Disconnected')
 
     def disconnect(self):
         self.db_engine.close()
         self.tunnel.stop_tunnel()
         self.schemaView.clear()
         self.tablesWidget.clear()
-        self.statusbar.showMessage('disconnected')
+        self.statusbar.showMessage('Disconnected')
 
     def get_meta(self, item):
         try:
@@ -190,10 +200,8 @@ class WinApp(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, "Error", str(err))
 
     def run(self):
-        self.statusbar.showMessage('running')
         self.dataWidget.setRowCount(0)
         self.dataWidget.setColumnCount(0)
-        QApplication.processEvents()
         try:
             self.stmt_signal.emit(
                 self.sqlEdit.toPlainText().strip().replace(';', ''))
@@ -201,7 +209,7 @@ class WinApp(QMainWindow, Ui_MainWindow):
         except Exception as err:
             QMessageBox.critical(self, "Error", str(err))
 
-    def show_results(self, results, columns, sql):
+    def show_results(self, results, columns, sql, save=True):
         try:
             num_cols = len(columns)
             num_rows = len(results)
@@ -220,11 +228,16 @@ class WinApp(QMainWindow, Ui_MainWindow):
                 self.dataWidget.setHorizontalHeaderItem(
                     j, QTableWidgetItem(header_label))
             self.data_schema = [column[1] for column in columns]
-            self.save_history(sql)
+            if not columns and not results:
+                self.dataWidget.setColumnCount(1)
+                self.dataWidget.setHorizontalHeaderItem(
+                    0, QTableWidgetItem("Empty Result"))
+            if save:
+                self.save_history(sql, results, columns)
         except Exception as err:
             QMessageBox.critical(self, "Error", str(err))
         finally:
-            self.statusbar.showMessage('finished')
+            self.statusbar.showMessage('Finished')
 
     def cancel(self):
         self.db_engine.cancel()
@@ -233,24 +246,37 @@ class WinApp(QMainWindow, Ui_MainWindow):
         self.progressBar.setValue(progress)
         QApplication.processEvents()
 
-    def save_history(self, sql):
+    def save_history(self, sql, results, columns):
         if sql not in self.history_cache:
             action = QAction(sql, self.historyMenu)
-            action.triggered.connect(partial(self.use_history, action))
-            self.history_cache[sql] = action
+            action.triggered.connect(partial(self.use_history, sql))
+            self.history_cache[sql] = {
+                KEY_ACTION: action, KEY_RESULTS: results, KEY_COLUMNS: columns}
         else:
-            action = self.history_cache[sql]
+            action = self.history_cache[sql][KEY_ACTION]
             self.historyMenu.removeAction(action)
+            if len(results) * len(columns) <= CACHE_LIMIT:
+                self.history_cache[sql][KEY_RESULTS] = results
+                self.history_cache[sql][KEY_COLUMNS] = columns
+            else:
+                self.history_cache[sql][KEY_RESULTS] = []
+                self.history_cache[sql][KEY_COLUMNS] = [
+                    ("results too large to cache", "varchar")]
         self.historyMenu.insertAction(
             self.historyMenu.actions()[0] if (
                 self.historyMenu.actions()) else None, action)
         self.db_lite.upsert(sql)
 
-    def use_history(self, action):
-        self.sqlEdit.setText(action.text())
+    def use_history(self, sql):
+        self.sqlEdit.setText(sql)
+        QApplication.processEvents()
+        cached = self.history_cache[sql]
+        self.db_engine.result_signal.emit(
+            cached[KEY_RESULTS], cached[KEY_COLUMNS], sql, False)
+        self.statusbar.showMessage("Loaded cached history")
 
-    def remove_action(self, sql, action):
-        self.historyMenu.removeAction(action)
+    def remove_action(self, sql, cached):
+        self.historyMenu.removeAction(cached[KEY_ACTION])
 
     def show_table_context_menu(self, position):
         col = self.dataWidget.columnAt(position.x())
@@ -362,6 +388,9 @@ class WinApp(QMainWindow, Ui_MainWindow):
 
     def show_error(self, error):
         QMessageBox.critical(self, "Error", error)
+
+    def show_msg(self, msg):
+        self.statusbar.showMessage(msg)
 
     def set_key_type(self, key_type):
         if key_type == 'KeyFile':

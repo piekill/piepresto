@@ -4,9 +4,10 @@ from timeout import timeout
 
 
 class DBEngine(QThread):
-    result_signal = pyqtSignal(list, list, str)
+    result_signal = pyqtSignal(list, list, str, bool)
     progress_signal = pyqtSignal(float)
     error_signal = pyqtSignal(str)
+    msg_signal = pyqtSignal(str)
 
     def __init__(self):
         QThread.__init__(self)
@@ -21,11 +22,12 @@ class DBEngine(QThread):
         if not self.connection:
             self.error_signal.emit("No Connection")
             return
+        self.msg_signal.emit("Running")
         results, columns = self.query(self.stmt)
-        if not results or not columns:
+        if not results and not columns:
             results = []
             columns = []
-        self.result_signal.emit(results, columns, self.stmt)
+        self.result_signal.emit(results, columns, self.stmt, True)
 
     def connect(self, url, user):
         self.close()

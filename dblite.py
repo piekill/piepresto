@@ -1,6 +1,7 @@
 import sqlite3
 import os
 
+history_limit = 30
 home = os.path.join(os.path.expanduser('~'), ".piepresto")
 os.makedirs(home, exist_ok=True)
 lite_db = os.path.join(home, "history.db")
@@ -12,8 +13,9 @@ history_table = """
     )
 """
 get_history = """
-    SELECT sql FROM history ORDER BY update_time DESC LIMIT 50
-"""
+    SELECT sql FROM history ORDER BY update_time DESC LIMIT {}
+""".format(history_limit)
+
 upsert_history = """
     INSERT INTO history(sql) VALUES (?) ON CONFLICT(sql) DO UPDATE SET update_time = current_timestamp
 """
