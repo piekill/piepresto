@@ -21,4 +21,15 @@
  # Note that on Linux you might need: 
  # LD_LIBRARY_PATH=your_path_to_python_lib pyinstaller piepresto.spec
  ```
-- Alternatively, go to [release](https://github.com/piekill/piepresto/releases) for prebuild binaries.
+- Alternatively, go to [release](https://github.com/piekill/piepresto/releases) for pre-built binaries.
+
+### Tunnel config
+Refer to the following figure for configuration of ssh tunnel:
+```
++-----+         |     +---------+         +--------------+
+| URL | <==ssh==|==>  | Gateway |  <===>  | PrestoServer |
++-----+         |     +---------+         +--------------+
+```
+
+## Screenshot
+![screenshot](https://github.com/piekill/piepresto/blob/master/screenshot.png "Screenshot of PiePresto (MacOS)")
