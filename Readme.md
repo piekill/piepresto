@@ -31,5 +31,5 @@ Refer to the following figure for configuration of ssh tunnel:
 +-----+         |     +---------+         +--------------+
 ```
 
-## Screenshot
+### Screenshot
 ![screenshot](https://github.com/piekill/piepresto/blob/master/screenshot.png "Screenshot of PiePresto (MacOS)")
